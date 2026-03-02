@@ -1,0 +1,296 @@
+# =============================================================================
+# .pylintrc — AI/ML Project Linting Configuration
+# =============================================================================
+# Philosophy: Catch real bugs and bad habits, but don't punish beginners for
+# style preferences that don't affect correctness. Rules are relaxed where
+# AI/ML workflows commonly diverge from general Python conventions.
+#
+# Severity levels in Pylint:
+#   E = Error       (likely a bug — always fix these)
+#   W = Warning     (potential problem — usually fix these)
+#   C = Convention  (style/readability — fix when you can)
+#   R = Refactor    (code complexity — aspirational improvements)
+#   I = Info        (informational — mostly disabled here)
+# =============================================================================
+
+
+[MASTER]
+
+# Analyse import fallbacks — useful for optional deps like torch/tensorflow
+analyse-fallback-blocks=no
+
+# Use all available CPU cores for faster linting on large projects
+jobs=0
+
+# Persist linting stats between runs — useful for tracking team improvement
+persistent=yes
+
+# Minimum Python version to target
+py-version=3.8
+
+# Don't fail hard if a suggested fix can't be applied
+suggestion-mode=yes
+
+# Silence warnings from third-party packages the team didn't write.
+# These libraries use dynamic attributes, C extensions, and metaclasses
+# that confuse pylint's static analysis.
+ignored-modules=numpy,pandas,sklearn,tensorflow,torch,keras,cv2,matplotlib,seaborn,scipy,transformers,datasets
+
+# Directories to skip entirely
+ignore=CVS,.git,_pycache_,.venv,venv,env,node_modules,migrations,notebooks
+
+# Auto-generated file patterns to skip
+ignore-patterns=.\.pyc,._pb2\.py,.*_generated\.py
+
+
+[MESSAGES CONTROL]
+
+# =============================================================================
+# DISABLED RULES — each with a rationale
+# =============================================================================
+# Turn rules back on as your team's skill level grows. A good pattern:
+# Month 1: Keep current config. Month 3: Re-enable R0913. Month 6: Re-enable C0116.
+# =============================================================================
+
+disable=
+    # --- Style preferences (non-functional, editor should handle these) ---
+    C0301,  # line-too-long: ML code has long method chains that are hard to
+            #   wrap without losing clarity: df.groupby(...).agg(...).reset_index(...)
+    C0303,  # trailing-whitespace: Handled by editor formatters (Black, Ruff)
+    C0304,  # missing-final-newline: Editor concern, not a logic issue
+    C0325,  # superfluous-parens: Beginners often add parens for clarity
+
+    # --- Import organization (let isort handle this separately) ---
+    C0411,  # wrong-import-order: Use isort as a separate formatter
+    C0412,  # ungrouped-imports: Same — isort's job, not pylint's
+    C0413,  # wrong-import-position: Common in script-style ML files
+    E0401,  # import-error: Too many false positives when optional deps
+             #   (torch, tensorflow) aren't installed in the lint environment
+
+    # --- Naming (data science has legitimate short-name conventions) ---
+    C0103,  # invalid-name: X, y, df, lr, W, mu are industry-standard in ML.
+             #   Single-letter names that would fail PEP8 are fine in context.
+
+    # --- Docstrings (encouraged via code review, not enforced by linter) ---
+    C0114,  # missing-module-docstring: Nice to have, not required
+    C0115,  # missing-class-docstring: Nice to have, not required
+    C0116,  # missing-function-docstring: Encourage in review instead
+
+    # --- Complexity (ML functions legitimately have many parameters) ---
+    R0913,  # too-many-arguments: train_model(lr, epochs, batch_size, dropout,
+             #   weight_decay, optimizer, scheduler, ...) is completely normal
+    R0914,  # too-many-locals: Complex pipelines need intermediate variables
+    R0912,  # too-many-branches: Decision-heavy evaluation logic is common
+    R0915,  # too-many-statements: Long training loops are acceptable
+
+    # --- Design patterns (too abstract for early-stage projects) ---
+    R0903,  # too-few-public-methods: ML classes are often single-purpose
+    W0511,  # fixme/todo: TODOs are useful scaffolding while learning
+
+    # --- Framework compatibility ---
+    W0212,  # protected-access: Common when subclassing PyTorch/Keras models
+    W0221,  # arguments-differ: Common when overriding model.forward()
+    W0223,  # abstract-method: Not all abstract methods need immediate impl
+    R0801,  # duplicate-code: Acceptable in experiment scripts
+    I1101,  # c-extension-no-member: False positives with numpy/pandas C exts
+    E1101   # no-member: False positives with dynamic framework attributes
+
+
+enable=
+    # Explicitly ensure these critical checks are always active:
+    E0001,  # syntax-error: Catches files that won't even run
+    E0102,  # function-redefined: Catches accidental name overwrites
+    E0602,  # undefined-variable: Catches typos in variable names (real bugs)
+    E0611,  # no-name-in-module: Catches broken/misspelled imports
+    W0611,  # unused-import: Keeps import blocks clean (common beginner issue)
+    W0612,  # unused-variable: Catches forgotten variables and typos
+    W0613,  # unused-argument: Signals when a function's signature may be wrong
+    W0621,  # redefined-outer-name: Prevents confusing variable shadowing
+    W0622,  # redefined-builtin: Catches list = [1,2,3] type mistakes
+    W1514   # unspecified-encoding: Enforces explicit encoding in open() calls
+
+
+[REPORTS]
+
+# Show a full summary table at the end — useful for tracking progress
+reports=yes
+
+# Show the pylint score — motivating to watch it improve over time
+score=yes
+
+# Human-readable output; switch to 'json' for CI/CD pipelines
+output-format=text
+
+# Include column numbers so errors are easy to locate in an editor
+msg-template={path}:{line}:{column}: {msg_id} ({symbol}): {msg}
+
+
+[FORMAT]
+
+# =============================================================================
+# Line length: 120 chars is standard for most ML teams.
+# PEP8 recommends 79, but that predates wide monitors and long library names.
+# sklearn.preprocessing.StandardScaler() alone is 40 chars.
+# =============================================================================
+max-line-length=120
+
+# 4-space indentation — Python standard, non-negotiable
+indent-string='    '
+
+indent-after-paren=4
+
+# Allow large files — training scripts and data pipelines can be long
+max-module-lines=2000
+
+
+[BASIC]
+
+# =============================================================================
+# Naming — relaxed to accommodate AI/ML domain conventions
+# =============================================================================
+
+# Whitelist common ML abbreviations that would otherwise fail length checks:
+#   X/y     = features and target labels (universal ML convention)
+#   df      = DataFrame
+#   lr      = learning rate
+#   wd      = weight decay
+#   bs      = batch size
+#   mu/nu   = statistical parameters
+#   ax/fig  = matplotlib Axes and Figure objects
+#   fp/fn   = false positives / false negatives
+good-names=i,j,k,n,m,x,y,z,X,Y,Z,df,lr,wd,bs,mu,nu,pi,ax,fig,fp,fn,tp,tn,e,f
+
+# CamelCase for classes (Python standard)
+class-rgx=[A-Z_][a-zA-Z0-9]+$
+
+# snake_case for functions and methods (Python standard)
+function-rgx=[a-z_][a-z0-9_]{1,50}$
+method-rgx=[a-z_][a-z0-9_]{1,50}$
+
+# Lowercase with underscores for modules
+module-rgx=[a-z_][a-z0-9_]{0,50}$
+
+# UPPER_CASE for constants, but snake_case is also allowed (for config dicts)
+const-rgx=(([A-Z_][A-Z0-9_])|(__._)|([a-z][a-z0-9_]*))$
+
+# Show the naming convention in error messages — helps beginners learn the rule
+include-naming-hint=yes
+
+
+[VARIABLES]
+
+# Don't flag unused variables starting with underscore.
+# This is a Python convention meaning "I know this is unused, intentionally":
+#   for _, value in pairs:     # _ means "I don't need the index"
+#   except Exception as _:     # _ means "I'm ignoring the exception"
+dummy-variables-rgx=$|dummy|unused|_
+
+init-import=no
+
+
+[TYPECHECK]
+
+# Suppress attribute lookup errors for these libraries.
+# They use C extensions, metaclasses, and runtime attribute generation that
+# pylint's static analysis cannot follow correctly.
+ignored-classes=
+    numpy,
+    pandas,
+    pandas.core.frame.DataFrame,
+    sklearn,
+    tensorflow,
+    torch,
+    keras
+
+# Don't error on attributes of @decorated functions (common in frameworks)
+ignore-mixin-members=yes
+
+# Don't error when inference returns "opaque" results
+ignore-on-opaque-inference=yes
+
+
+[SIMILARITIES]
+
+# Only flag duplication when 10+ lines are identical.
+# ML projects have legitimate boilerplate in training scripts and configs.
+min-similarity-lines=10
+
+# These don't count toward similarity (common in all well-structured code)
+ignore-docstrings=yes
+ignore-comments=yes
+ignore-imports=yes
+
+
+[DESIGN]
+
+# =============================================================================
+# Complexity limits — generous enough for ML, but not unlimited.
+# When you hit these limits, it's a signal to refactor — not a hard stop.
+# =============================================================================
+
+# Max function arguments (10 covers most hyperparameter-heavy functions)
+max-args=10
+
+# Max local variables (data pipelines often need many intermediate results)
+max-locals=20
+
+# Max return statements in a function
+max-returns=6
+
+# Max branches (if/elif, for, while, try/except all count)
+max-branches=15
+
+# Max statements in a function body
+max-statements=60
+
+# Max public methods per class
+max-public-methods=25
+
+# Max instance attributes per class
+max-attributes=12
+
+# Min public methods — ML classes often only expose fit/predict/transform
+min-public-methods=1
+
+
+[CLASSES]
+
+# Ensure instance attributes are defined in recognised setup methods.
+# Helps beginners understand that attributes should be declared in _init_,
+# not scattered across the class.
+defining-attr-methods=_init,new,setUp,post_init_
+
+# Standard names for classmethod first argument
+valid-classmethod-first-arg=cls
+valid-metaclass-classmethod-first-arg=cls
+
+
+[IMPORTS]
+
+# Flag wildcard imports — "from module import *" obscures what's available.
+# Beginners: always be explicit about what you're importing.
+#   Bad:  from sklearn.linear_model import *
+#   Good: from sklearn.linear_model import LinearRegression, Ridge
+allow-wildcard-with-all=no
+
+# Warn about deprecated standard library modules
+deprecated-modules=optparse,tkinter.tix
+
+
+[EXCEPTIONS]
+
+# Warn when catching BaseException or Exception without re-raising.
+# Teaches beginners to catch specific errors they expect:
+#   Bad:  except Exception: pass      (silently swallows all errors)
+#   Good: except ValueError as e: ... (handles what you expect)
+overgeneral-exceptions=builtins.BaseException,builtins.Exception
+
+
+[LOGGING]
+
+# Use %-style format strings in logging, not f-strings or .format().
+# Why: "logging.info('Loss: %s', loss)" only constructs the string if the
+# log level is active — a small but real performance win in training loops.
+#   Good: logging.info("Epoch %d, loss: %.4f", epoch, loss)
+#   Bad:  logging.info(f"Epoch {epoch}, loss: {loss:.4f}")
+logging-format-style=old
