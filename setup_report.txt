@@ -1,12 +1,15 @@
 === Developer Onboarding Check ===
-Generated: 2026-03-02 23:03:53
+Generated : 2026-03-02 23:09:35
+Total time: 1.552s
 
-[FAIL] Python version: 3.9.6 (>= 3.10 required)
-[PASS] Virtual environment: Active (onboarding_env)
-[PASS] pylint installed: version 3.3.9
-[PASS] black installed: version 25.11.0
-[PASS] Internet connectivity: OK
-[PASS] numpy installed: version 2.0.2
+[FAIL] Python version: 3.9.6 (>= 3.10 required)  (0.0ms)
+[PASS] Virtual environment: Active (onboarding_env)  (0.0ms)
+[PASS] Disk space: 133.53 GB free  (0.0ms)
+[PASS] pylint installed: version 3.3.9  (2.6ms)
+[PASS] black installed: version 25.11.0  (275.5ms)
+[PASS] numpy installed: version 2.0.2  (94.7ms)
+[PASS] requests installed: version 2.32.5  (77.0ms)
+[PASS] Internet connectivity: OK  (1101.9ms)
 
 ---
-Result: 5/6 checks passed ✗
+Result: 7/8 checks passed ✗
