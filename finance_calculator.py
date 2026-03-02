@@ -1,102 +1,99 @@
 """
-Personal Finance Tool for AI Startup Employee Benefits Portal.
-This module calculates monthly financial breakdowns, tax deductions,
-and annual projections based on employee input.
+Advanced Financial Tool for AI Startup Employee Benefits.
+Features: Indian Number Formatting, Employee Comparison, and Health Scoring.
 """
 
-def get_validated_input(prompt, min_val=None, max_val=None):
+def format_indian_currency(amount):
     """
-    Prompts the user for a float input and validates it against bounds.
-
-    Args:
-        prompt (str): The text to display to the user.
-        min_val (float): The minimum allowable value.
-        max_val (float): The maximum allowable value.
-
-    Returns:
-        float: The validated user input.
+    Formats a number into the Indian Lakhs/Crores system (e.g., 12,00,000.00).
     """
-    while True:
-        try:
-            value = float(input(prompt))
-            if min_val is not None and value <= min_val:
-                print(f"Error: Value must be greater than {min_val}.")
-                continue
-            if max_val is not None and value > max_val:
-                print(f"Error: Value cannot exceed {max_val}.")
-                continue
-            return value
-        except ValueError:
-            print("Error: Please enter a valid numerical decimal.")
+    str_amount = f"{amount:.2f}"
+    integer_part, decimal_part = str_amount.split(".")
+    
+    if len(integer_part) <= 3:
+        return f"₹{integer_part}.{decimal_part}"
+    
+    # Last 3 digits remain as a group
+    last_three = integer_part[-3:]
+    other_digits = integer_part[:-3]
+    
+    # Remaining digits are grouped in pairs (Lakhs, Crores)
+    res = ""
+    while len(other_digits) > 2:
+        res = "," + other_digits[-2:] + res
+        other_digits = other_digits[:-2]
+    
+    return f"₹{other_digits}{res},{last_three}.{decimal_part}"
 
-def calculate_finance_data(salary, tax_rate, rent, savings_rate):
+def calculate_health_score(rent_ratio, savings_rate, disposable_percent):
     """
-    Performs financial calculations based on raw inputs.
+    Calculates a health score (0-100) based on financial benchmarks:
+    - Rent: < 30% is ideal (40 points)
+    - Savings: > 20% is ideal (40 points)
+    - Disposable: > 10% is ideal (20 points)
+    """
+    score = 0
+    # Rent Score (Lower is better)
+    if rent_ratio <= 30: score += 40
+    elif rent_ratio <= 40: score += 20
+    
+    # Savings Score (Higher is better)
+    if savings_rate >= 20: score += 40
+    elif savings_rate >= 10: score += 20
+    
+    # Disposable Score (Higher is better)
+    if disposable_percent >= 15: score += 20
+    elif disposable_percent >= 5: score += 10
+        
+    return score
 
-    Returns:
-        dict: A dictionary containing calculated financial metrics.
-    """
-    monthly_gross = salary / 12
-    monthly_tax = monthly_gross * (tax_rate / 100)
-    net_salary = monthly_gross - monthly_tax
-    rent_ratio = (rent / net_salary) * 100 if net_salary > 0 else 0
-    savings_amount = net_salary * (savings_rate / 100)
-    disposable = net_salary - rent - savings_amount
+def get_employee_data():
+    """Collects and returns a dictionary of employee financial data."""
+    name = input("\nEnter Employee Name: ")
+    salary = float(input("Annual Salary (₹): "))
+    tax_rate = float(input("Tax Bracket (%): "))
+    rent = float(input("Monthly Rent (₹): "))
+    save_rate = float(input("Savings Goal (%): "))
+
+    # Logic
+    m_gross = salary / 12
+    m_tax = m_gross * (tax_rate / 100)
+    net = m_gross - m_tax
+    rent_p = (rent / net) * 100
+    save_amt = net * (save_rate / 100)
+    disp = net - rent - save_amt
+    disp_p = (disp / net) * 100
 
     return {
-        "monthly_gross": monthly_gross,
-        "monthly_tax": monthly_tax,
-        "net_salary": net_salary,
-        "rent_ratio": rent_ratio,
-        "savings_amount": savings_amount,
-        "disposable": disposable,
-        "annual_tax": monthly_tax * 12,
-        "annual_savings": savings_amount * 12,
-        "annual_rent": rent * 12
+        "name": name, "salary": salary, "net": net,
+        "rent": rent, "rent_p": rent_p, "save_amt": save_amt,
+        "save_p": save_rate, "disp": disp, "disp_p": disp_p,
+        "score": calculate_health_score(rent_p, save_rate, disp_p)
     }
 
-def display_report(name, salary, tax_rate, rent, savings_rate, data):
-    """
-    Generates and prints a professionally formatted f-string report.
-    """
-    line_heavy = "════════════════════════════════════════════"
-    line_light = "────────────────────────────────────────────"
-
-    print(line_heavy)
-    print("EMPLOYEE FINANCIAL SUMMARY")
-    print(line_heavy)
-    print(f"Employee        : {name}")
-    print(f"Annual Salary   : ₹{salary:,.2f}")
-    print(line_light)
-    print("Monthly Breakdown:")
-    print(f"Gross Salary    : ₹ {data['monthly_gross']:,.2f}")
-    print(f"Tax ({tax_rate:.1f}%)    : ₹ {data['monthly_tax']:,.2f}")
-    print(f"Net Salary      : ₹ {data['net_salary']:,.2f}")
-    print(f"Rent            : ₹ {rent:,.2f} ({data['rent_ratio']:.1f}% of net)")
-    print(f"Savings ({savings_rate:.1f}%) : ₹ {data['savings_amount']:,.2f}")
-    print(f"Disposable      : ₹ {data['disposable']:,.2f}")
-    print(line_light)
-    print("Annual Projection:")
-    print(f"Total Tax       : ₹ {data['annual_tax']:,.2f}")
-    print(f"Total Savings   : ₹ {data['annual_savings']:,.2f}")
-    print(f"Total Rent      : ₹ {data['annual_rent']:,.2f}")
-    print(line_heavy)
-
 def main():
-    """
-    Orchestrates the program flow: input, calculation, and output.
-    """
-    print("Welcome to the Employee Benefits Portal - Finance Tool\n")
+    """Main execution to compare two employees."""
+    print("--- Personal Finance Tool: Comparison Mode ---")
+    emp1 = get_employee_data()
+    emp2 = get_employee_data()
 
-    emp_name = input("Enter Employee Name: ").strip()
-    ann_salary = get_validated_input("Enter Annual Salary: ₹", min_val=0)
-    tax_bracket = get_validated_input("Enter Tax Bracket (%): ", min_val=0, max_val=50)
-    monthly_rent = get_validated_input("Enter Monthly Rent: ₹", min_val=0)
-    save_goal = get_validated_input("Enter Savings Goal (%): ", min_val=0, max_val=100)
+    header = f"{'Metric':<20} | {emp1['name']:<15} | {emp2['name']:<15}"
+    sep = "─" * len(header)
 
-    results = calculate_finance_data(ann_salary, tax_bracket, monthly_rent, save_goal)
+    print(f"\n{sep}\n{header}\n{sep}")
+    metrics = [
+        ("Monthly Net", "net", True),
+        ("Rent Paid", "rent", True),
+        ("Rent % of Net", "rent_p", False),
+        ("Monthly Savings", "save_amt", True),
+        ("Health Score", "score", False)
+    ]
 
-    display_report(emp_name, ann_salary, tax_bracket, monthly_rent, save_goal, results)
+    for label, key, is_curr in metrics:
+        val1 = format_indian_currency(emp1[key]) if is_curr else f"{emp1[key]:.1f}"
+        val2 = format_indian_currency(emp2[key]) if is_curr else f"{emp2[key]:.1f}"
+        print(f"{label:<20} | {val1:<15} | {val2:<15}")
+    print(sep)
 
 if __name__ == "__main__":
     main()
