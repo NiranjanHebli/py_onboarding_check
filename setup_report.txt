@@ -1,0 +1,12 @@
+=== Developer Onboarding Check ===
+Generated: 2026-03-02 22:43:40
+
+[FAIL] Python version: 3.9.6 (>= 3.10 required)
+[PASS] Virtual environment: Active (onboarding_env)
+[PASS] pylint installed: version 3.3.9
+[PASS] black installed: version 25.11.0
+[PASS] Internet connectivity: OK
+[PASS] numpy installed: version 2.0.2
+
+---
+Result: 5/6 checks passed ✗
